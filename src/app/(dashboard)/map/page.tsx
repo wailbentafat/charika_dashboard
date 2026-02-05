@@ -11,15 +11,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-
-// Mocking the Map components since this is a UI template
-const Map = ({ children, center, zoom }: any) => (
-  <div className="w-full h-full bg-[#f8f9fa] relative overflow-hidden rounded-xl border border-border">
-    {/* Simulated Map Grid Background */}
-    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', size: '20px 20px' }} />
-    {children}
-  </div>
-)
+import {
+  Map,
+  MapMarker,
+  MarkerContent,
+  MarkerTooltip,
+  MarkerPopup,
+  MapControls,
+} from '@/components/ui/map'
 
 interface Bin {
   id: string
@@ -28,17 +27,17 @@ interface Bin {
   type: 'Organic' | 'Plastic' | 'Mixed' | 'Metal' | 'Glass'
   lastCollection: string
   driver: string
-  lat: number
-  lng: number
+  latitude: number
+  longitude: number
   battery: number
 }
 
 const mockBins: Bin[] = [
-  { id: 'BIN-772', location: 'Didouche Mourad, Algiers', fillLevel: 95, type: 'Organic', lastCollection: '2h ago', driver: 'John Doe', lat: 40, lng: 30, battery: 82 },
-  { id: 'BIN-104', location: 'The Casbah, Algiers', fillLevel: 65, type: 'Plastic', lastCollection: '4h ago', driver: 'Jane Smith', lat: 55, lng: 45, battery: 12 },
-  { id: 'BIN-901', location: 'City Center, Oran', fillLevel: 42, type: 'Mixed', lastCollection: '1d ago', driver: 'Mike Johnson', lat: 25, lng: 60, battery: 94 },
-  { id: 'BIN-332', location: 'Cirta, Constantine', fillLevel: 88, type: 'Metal', lastCollection: '6h ago', driver: 'Sarah Lee', lat: 70, lng: 20, battery: 65 },
-  { id: 'BIN-005', location: 'Bab El Oued, Algiers', fillLevel: 15, type: 'Glass', lastCollection: '3h ago', driver: 'John Doe', lat: 30, lng: 80, battery: 45 },
+  { id: 'BIN-772', location: 'Didouche Mourad, Algiers', fillLevel: 95, type: 'Organic', lastCollection: '2h ago', driver: 'John Doe', latitude: 36.7538, longitude: 3.0588, battery: 82 },
+  { id: 'BIN-104', location: 'The Casbah, Algiers', fillLevel: 65, type: 'Plastic', lastCollection: '4h ago', driver: 'Jane Smith', latitude: 36.7794, longitude: 3.0500, battery: 12 },
+  { id: 'BIN-901', location: 'City Center, Oran', fillLevel: 42, type: 'Mixed', lastCollection: '1d ago', driver: 'Mike Johnson', latitude: 35.6911, longitude: -0.6417, battery: 94 },
+  { id: 'BIN-332', location: 'Cirta, Constantine', fillLevel: 88, type: 'Metal', lastCollection: '6h ago', driver: 'Sarah Lee', latitude: 36.3650, longitude: 6.6147, battery: 65 },
+  { id: 'BIN-005', location: 'Bab El Oued, Algiers', fillLevel: 15, type: 'Glass', lastCollection: '3h ago', driver: 'John Doe', latitude: 36.7833, longitude: 3.0600, battery: 45 },
 ]
 
 export default function MapPage() {
@@ -88,10 +87,18 @@ export default function MapPage() {
         {/* Map Interface Area */}
         <div className="xl:col-span-3 relative group">
           <Card className="h-[750px] overflow-hidden border-none shadow-2xl relative">
-            <Map center={[36.7, 3.0]} zoom={12}>
-              {/* Simulated UI Overlays for the Map */}
-              <div className="absolute top-6 left-6 z-10 space-y-2">
-                <div className="flex flex-wrap gap-2">
+            <Map center={[3.0, 36.7]} zoom={12}>
+              <MapControls 
+                showZoom={true}
+                showLocate={true}
+                showCompass={true}
+                showFullscreen={true}
+                position="top-right"
+              />
+              
+              {/* Filter Buttons Overlay */}
+              <div className="absolute top-6 left-6 z-10 space-y-2 pointer-events-none">
+                <div className="flex flex-wrap gap-2 pointer-events-auto">
                   {['All', 'Organic', 'Plastic', 'Glass', 'Metal'].map(t => (
                     <Button 
                       key={t}
@@ -106,39 +113,105 @@ export default function MapPage() {
                 </div>
               </div>
 
-              {/* Map Action Buttons */}
-              <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
-                <Button size="icon" variant="secondary" className="bg-card shadow-md h-10 w-10"><Layers size={18} /></Button>
-                <Button size="icon" variant="secondary" className="bg-card shadow-md h-10 w-10"><Maximize2 size={18} /></Button>
+              {/* Additional Map Action Buttons */}
+              <div className="absolute top-6 right-20 z-10 flex flex-col gap-2 pointer-events-none">
+                <Button size="icon" variant="secondary" className="bg-card shadow-md h-10 w-10 pointer-events-auto"><Layers size={18} /></Button>
+                <Button size="icon" variant="secondary" className="bg-card shadow-md h-10 w-10 pointer-events-auto"><Maximize2 size={18} /></Button>
               </div>
 
-              {/* Simulated Markers */}
+              {/* Real Map Markers */}
               {filteredBins.map((bin) => (
-                <div 
+                <MapMarker
                   key={bin.id}
+                  longitude={bin.longitude}
+                  latitude={bin.latitude}
                   onClick={() => setSelectedBin(bin)}
-                  className="absolute cursor-pointer transition-all hover:scale-125"
-                  style={{ top: `${bin.lat}%`, left: `${bin.lng}%` }}
                 >
-                  <div className="relative">
-                    {bin.fillLevel > 80 && (
-                      <div className="absolute inset-0 bg-destructive rounded-full animate-ping opacity-40 scale-150" />
-                    )}
-                    <div className={cn(
-                      "w-10 h-10 rounded-2xl border-2 border-white shadow-xl flex items-center justify-center transition-colors",
-                      bin.fillLevel > 80 ? "bg-destructive" : bin.fillLevel > 50 ? "bg-amber-500" : "bg-emerald-500"
-                    )}>
-                      <Trash2 size={18} className="text-white" />
-                      <div className="absolute -bottom-1 -right-1 px-1 rounded bg-white text-[8px] font-black border border-border shadow-sm">
-                        {bin.fillLevel}%
+                  <MarkerContent>
+                    <div className="relative">
+                      {bin.fillLevel > 80 && (
+                        <div className="absolute inset-0 bg-destructive rounded-full animate-ping opacity-40 scale-150" />
+                      )}
+                      <div className={cn(
+                        "w-10 h-10 rounded-2xl border-2 border-white shadow-xl flex items-center justify-center transition-colors cursor-pointer hover:scale-110",
+                        bin.fillLevel > 80 ? "bg-destructive" : bin.fillLevel > 50 ? "bg-amber-500" : "bg-emerald-500"
+                      )}>
+                        <Trash2 size={18} className="text-white" />
+                        <div className="absolute -bottom-1 -right-1 px-1 rounded bg-white text-[8px] font-black border border-border shadow-sm">
+                          {bin.fillLevel}%
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </MarkerContent>
+                  <MarkerTooltip>
+                    <div className="text-sm space-y-1">
+                      <p className="font-medium">{bin.id}</p>
+                      <p className="text-muted-foreground">{bin.location}</p>
+                      <p className="text-xs">Fill: {bin.fillLevel}%</p>
+                    </div>
+                  </MarkerTooltip>
+                  <MarkerPopup>
+                    <div className="w-64 space-y-3">
+                      {/* Header */}
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <div>
+                          <h3 className="font-semibold text-base">{bin.id}</h3>
+                          <p className="text-xs text-muted-foreground">{bin.location}</p>
+                        </div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center`}
+                          style={{ backgroundColor: bin.fillLevel > 80 ? '#dc3545' : bin.fillLevel > 50 ? '#f0ad4e' : '#34b27b' }}
+                        >
+                          <Trash2 size={14} className="text-white" />
+                        </div>
+                      </div>
+
+                      {/* Fill Level */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Fill Level</span>
+                          <span className="font-medium">{bin.fillLevel}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full transition-all duration-300"
+                            style={{ 
+                              width: `${bin.fillLevel}%`,
+                              backgroundColor: bin.fillLevel > 80 ? '#dc3545' : bin.fillLevel > 50 ? '#f0ad4e' : '#34b27b'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Other Info */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Type</p>
+                          <p className="font-medium">{bin.type}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">Last Collection</p>
+                          <p className="font-medium">{bin.lastCollection}</p>
+                        </div>
+                      </div>
+
+                      {/* Driver Info */}
+                      <div className="flex items-center gap-2 text-sm">
+                        <User size={14} className="text-muted-foreground" />
+                        <span className="text-muted-foreground">Driver:</span>
+                        <span className="font-medium">{bin.driver}</span>
+                      </div>
+
+                      {/* Action Button */}
+                      <Button className="w-full bg-primary text-white hover:bg-primary/90 text-sm">
+                        Schedule Collection
+                      </Button>
+                    </div>
+                  </MarkerPopup>
+                </MapMarker>
               ))}
 
               {/* Floating Legend */}
-              <div className="absolute bottom-6 left-6 bg-card/80 backdrop-blur-md p-4 rounded-xl border border-border shadow-lg space-y-3 min-w-[140px]">
+              <div className="absolute bottom-6 left-6 bg-card/80 backdrop-blur-md p-4 rounded-xl border border-border shadow-lg space-y-3 min-w-[140px] pointer-events-none">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b pb-2">Status Key</p>
                 <div className="space-y-2">
                   {[
