@@ -36,7 +36,10 @@ export default function CalendarPage() {
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
-  const calendarDays = Array.from({ length: firstDay }, () => null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1))
+  const calendarDays: (number | null)[] = [
+    ...Array.from({ length: firstDay }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  ]
 
   const getEventsForDate = (day: number) => {
     const dateStr = `2024-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`

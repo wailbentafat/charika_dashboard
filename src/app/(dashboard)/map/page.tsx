@@ -57,7 +57,6 @@ export default function MapPage() {
   return (
     <div className="p-8 space-y-8 bg-background min-h-screen max-w-[1600px] mx-auto">
       
-      {/* Header with Live Status Pulse */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 text-primary">
@@ -84,10 +83,9 @@ export default function MapPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         
-        {/* Map Interface Area */}
         <div className="xl:col-span-3 relative group">
           <Card className="h-[750px] overflow-hidden border-none shadow-2xl relative">
-            <Map center={[3.0, 36.7]} zoom={12}>
+            <Map center={[3.0, 36.7]} zoom={12} theme='light'>
               <MapControls 
                 showZoom={true}
                 showLocate={true}
